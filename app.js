@@ -1,7 +1,7 @@
-// InfoBrasil — servidor único (Node 18+, sem dependências).
-// Variáveis de ambiente opcionais no Render:
-//   TURNSTILE_SITEKEY / TURNSTILE_SECRET  -> captcha grátis (Cloudflare Turnstile)
-//   ADSENSE_CLIENT (ca-pub-XXXXXXXXXXXXXXXX) / ADSENSE_SLOT -> anúncios (Google AdSense)
+// InfoBrasil \u2014 servidor \u00fanico (Node 18+, sem depend\u00eancias).
+// Vari\u00e1veis de ambiente opcionais no Render:
+//   TURNSTILE_SITEKEY / TURNSTILE_SECRET  -> captcha gr\u00e1tis (Cloudflare Turnstile)
+//   ADSENSE_CLIENT (ca-pub-XXXXXXXXXXXXXXXX) / ADSENSE_SLOT -> an\u00fancios (Google AdSense)
 const http = require('http');
 
 const PORT = process.env.PORT || 3000;
@@ -47,10 +47,10 @@ async function candidato(q) {
     const uf = (q.get('uf') || '').toUpperCase();
     const mun = (q.get('municipio') || '').trim();
     if (!CARGOS[cargo] || !/^\d{4}$/.test(ano) || !/^\d{2,5}$/.test(numero)) {
-        throw erro(400, 'Informe o cargo, o ano (4 dígitos) e o número do candidato.');
+        throw erro(400, 'Informe o cargo, o ano (4 d\u00edgitos) e o n\u00famero do candidato.');
     }
     const ue = cargo === 'presidente' ? 'BR' : cargo === 'prefeito' ? mun : uf;
-    if (!/^[A-Z0-9]{2,6}$/.test(ue)) throw erro(400, 'Escolha o estado e, para prefeito, o município.');
+    if (!/^[A-Z0-9]{2,6}$/.test(ue)) throw erro(400, 'Escolha o estado e, para prefeito, o munic\u00edpio.');
 
     for (const cod of await eleicoesDoAno(ano)) {
         let lista;
@@ -77,35 +77,35 @@ async function candidato(q) {
             foto: '/api/foto?u=' + encodeURIComponent(foto),
         };
     }
-    throw erro(404, 'Nenhum candidato encontrado com esse número, cargo e ano. Confira os dados.');
+    throw erro(404, 'Nenhum candidato encontrado com esse n\u00famero, cargo e ano. Confira os dados.');
 }
 
 async function municipios(uf, ano) {
-    if (!/^[A-Za-z]{2}$/.test(uf || '')) throw erro(400, 'UF inválida.');
+    if (!/^[A-Za-z]{2}$/.test(uf || '')) throw erro(400, 'UF inv\u00e1lida.');
     return cached('mun' + uf + ano, 24 * HORA, async () => {
         for (const cod of await eleicoesDoAno(ano)) {
             try {
                 const d = await getJSON(`${TSE}/eleicao/buscar/${uf.toUpperCase()}/${cod}/municipios`);
                 const l = (d.municipios || []).map((m) => ({ codigo: m.codigo, nome: m.nome }));
                 if (l.length) return l;
-            } catch { /* tenta a próxima eleição do ano */ }
+            } catch { /* tenta a pr\u00f3xima elei\u00e7\u00e3o do ano */ }
         }
-        throw erro(404, 'Municípios não encontrados para esse ano.');
+        throw erro(404, 'Munic\u00edpios n\u00e3o encontrados para esse ano.');
     });
 }
 
 async function foto(u) {
     const url = new URL(u);
-    if (!/(^|\.)tse\.jus\.br$/.test(url.hostname)) throw erro(400, 'Origem não permitida.');
+    if (!/(^|\.)tse\.jus\.br$/.test(url.hostname)) throw erro(400, 'Origem n\u00e3o permitida.');
     url.protocol = 'https:';
     const r = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(15000) });
-    if (!r.ok) throw erro(404, 'Foto indisponível.');
+    if (!r.ok) throw erro(404, 'Foto indispon\u00edvel.');
     return { tipo: r.headers.get('content-type') || 'image/jpeg', buf: Buffer.from(await r.arrayBuffer()) };
 }
 
 // ---------- CNPJ (BrasilAPI, dados da Receita Federal) ----------
 async function cnpj(raw) {
-    // aceita também o CNPJ alfanumérico (14 caracteres)
+    // aceita tamb\u00e9m o CNPJ alfanum\u00e9rico (14 caracteres)
     const id = String(raw || '').toUpperCase().replace(/[^0-9A-Z]/g, '');
     if (id.length !== 14) throw erro(400, 'O CNPJ precisa ter 14 caracteres.');
     try {
@@ -133,13 +133,13 @@ async function cnpj(raw) {
     }
 }
 
-// ---------- Exército (lê a descrição das páginas oficiais; usa texto de reserva se falhar) ----------
+// ---------- Ex\u00e9rcito (l\u00ea a descri\u00e7\u00e3o das p\u00e1ginas oficiais; usa texto de reserva se falhar) ----------
 const EB = [
-    ['Alistamento militar', 'https://alistamento.eb.mil.br/', 'Alistamento online, prazos e documentos do serviço militar obrigatório.'],
-    ['Ingresso e recrutamento', 'https://www.eb.mil.br/', 'Formas de ingresso na carreira, serviço temporário, colégios militares e concursos.'],
-    ['Oficiais de carreira (EsPCEx)', 'https://www.espcex.eb.mil.br/', 'Escola Preparatória de Cadetes do Exército, porta de entrada para a formação de oficiais.'],
-    ['Sargentos (ESA)', 'https://www.esa.eb.mil.br/', 'Escola de Sargentos das Armas: formação de sargentos de carreira.'],
-    ['Engenharia militar (IME)', 'https://www.ime.eb.mil.br/', 'Instituto Militar de Engenharia: formação de engenheiros militares.'],
+    ['Alistamento militar', 'https://alistamento.eb.mil.br/', 'Alistamento online, prazos e documentos do servi\u00e7o militar obrigat\u00f3rio.'],
+    ['Ingresso e recrutamento', 'https://www.eb.mil.br/', 'Formas de ingresso na carreira, servi\u00e7o tempor\u00e1rio, col\u00e9gios militares e concursos.'],
+    ['Oficiais de carreira (EsPCEx)', 'https://www.espcex.eb.mil.br/', 'Escola Preparat\u00f3ria de Cadetes do Ex\u00e9rcito, porta de entrada para a forma\u00e7\u00e3o de oficiais.'],
+    ['Sargentos (ESA)', 'https://www.esa.eb.mil.br/', 'Escola de Sargentos das Armas: forma\u00e7\u00e3o de sargentos de carreira.'],
+    ['Engenharia militar (IME)', 'https://www.ime.eb.mil.br/', 'Instituto Militar de Engenharia: forma\u00e7\u00e3o de engenheiros militares.'],
 ];
 
 const limpa = (s) => s.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#0?39;/g, "'").replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
@@ -187,7 +187,7 @@ function limitado(ip) {
     return a.length > 30;
 }
 
-// ---------- Página ----------
+// ---------- P\u00e1gina ----------
 const cap = () => (SITEKEY ? '<div class="cf-turnstile" data-sitekey="' + SITEKEY + '"></div>' : '');
 
 function pagina() {
@@ -197,15 +197,15 @@ function pagina() {
     const tsHead = SITEKEY ? '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>' : '';
     const adUnit = ADS_CLIENT && ADS_SLOT
         ? '<ins class="adsbygoogle" style="display:block" data-ad-client="' + ADS_CLIENT + '" data-ad-slot="' + ADS_SLOT + '" data-ad-format="auto" data-full-width-responsive="true"></ins><script>(adsbygoogle=window.adsbygoogle||[]).push({});</script>'
-        : '<!-- Anúncio: defina ADSENSE_CLIENT e ADSENSE_SLOT no Render -->';
+        : '<!-- An\u00fancio: defina ADSENSE_CLIENT e ADSENSE_SLOT no Render -->';
 
     return `<!doctype html>
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>InfoBrasil — consultas em fontes oficiais</title>
-<meta name="description" content="Exército Brasileiro, candidatos e CNPJ com dados de fontes oficiais.">
+<title>InfoBrasil \u2014 consultas em fontes oficiais</title>
+<meta name="description" content="Ex\u00e9rcito Brasileiro, candidatos e CNPJ com dados de fontes oficiais.">
 ${adsHead}
 ${tsHead}
 <style>
@@ -258,16 +258,16 @@ footer{text-align:center;color:var(--mudo);font-size:13px;padding:0 16px 30px}
 
 <main>
   <section id="v-home">
-    <p class="lead">Consulte dados públicos direto de fontes oficiais.</p>
-    <button class="tile t-eb" data-go="eb"><b>Exército Brasileiro</b><span>Alistamento, ingresso e formação</span></button>
+    <p class="lead">Consulte dados p\u00fablicos direto de fontes oficiais.</p>
+    <button class="tile t-eb" data-go="eb"><b>Ex\u00e9rcito Brasileiro</b><span>Alistamento, ingresso e forma\u00e7\u00e3o</span></button>
     <button class="tile t-gov" data-go="gov"><b>Governo</b><span>Presidente, governador, senador e prefeito</span></button>
-    <button class="tile t-cnpj" data-go="cnpj"><b>CNPJ</b><span>Se existe, situação cadastral e dados da empresa</span></button>
+    <button class="tile t-cnpj" data-go="cnpj"><b>CNPJ</b><span>Se existe, situa\u00e7\u00e3o cadastral e dados da empresa</span></button>
   </section>
 
   <section id="v-eb" hidden>
     <button class="voltar" data-go="home">&larr; Voltar</button>
-    <h2>Exército Brasileiro</h2>
-    <p class="nota" style="margin:0 0 14px">Conteúdo lido dos sites oficiais do Exército. O único endereço oficial de alistamento é alistamento.eb.mil.br; desconfie de sites que cobram taxa.</p>
+    <h2>Ex\u00e9rcito Brasileiro</h2>
+    <p class="nota" style="margin:0 0 14px">Conte\u00fado lido dos sites oficiais do Ex\u00e9rcito. O \u00fanico endere\u00e7o oficial de alistamento \u00e9 alistamento.eb.mil.br; desconfie de sites que cobram taxa.</p>
     <div id="eb-list"></div>
   </section>
 
@@ -284,16 +284,16 @@ footer{text-align:center;color:var(--mudo);font-size:13px;padding:0 16px 30px}
         </select>
       </label>
       <div class="row">
-        <label>Ano da eleição <input name="ano" type="number" inputmode="numeric" min="1998" max="2030" placeholder="2022" required></label>
-        <label>Número do candidato <input name="numero" inputmode="numeric" maxlength="5" placeholder="13" required></label>
+        <label>Ano da elei\u00e7\u00e3o <input name="ano" type="number" inputmode="numeric" min="1998" max="2030" placeholder="2022" required></label>
+        <label>N\u00famero do candidato <input name="numero" inputmode="numeric" maxlength="5" placeholder="13" required></label>
       </div>
-      <label id="f-uf" hidden>Estado <select name="uf"><option value="">Escolha…</option></select></label>
-      <label id="f-mun" hidden>Município <input name="municipio" list="mun-list" autocomplete="off" placeholder="Digite o nome da cidade"><datalist id="mun-list"></datalist></label>
+      <label id="f-uf" hidden>Estado <select name="uf"><option value="">Escolha\u2026</option></select></label>
+      <label id="f-mun" hidden>Munic\u00edpio <input name="municipio" list="mun-list" autocomplete="off" placeholder="Digite o nome da cidade"><datalist id="mun-list"></datalist></label>
       ${cap()}
       <button class="go" type="submit">Consultar candidato</button>
     </form>
     <div id="gov-out"></div>
-    <p class="nota">Fonte: Tribunal Superior Eleitoral (DivulgaCandContas). Presidente usa o número nacional; os demais cargos dependem do estado ou município.</p>
+    <p class="nota">Fonte: Tribunal Superior Eleitoral (DivulgaCandContas). Presidente usa o n\u00famero nacional; os demais cargos dependem do estado ou munic\u00edpio.</p>
   </section>
 
   <section id="v-cnpj" hidden>
@@ -310,7 +310,7 @@ footer{text-align:center;color:var(--mudo);font-size:13px;padding:0 16px 30px}
 </main>
 
 <aside class="ad">${adUnit}</aside>
-<footer>InfoBrasil não é um site do governo. Os dados vêm de fontes públicas oficiais e podem ter atraso.</footer>
+<footer>InfoBrasil n\u00e3o \u00e9 um site do governo. Os dados v\u00eam de fontes p\u00fablicas oficiais e podem ter atraso.</footer>
 
 <script>
 (function () {
@@ -361,11 +361,11 @@ footer{text-align:center;color:var(--mudo);font-size:13px;padding:0 16px 30px}
     if (w && window.turnstile) window.turnstile.reset(w);
   }
 
-  // ----- Exército -----
+  // ----- Ex\u00e9rcito -----
   async function loadEB() {
     if (ebLoaded) return;
     var box = $('#eb-list');
-    box.textContent = 'Carregando…';
+    box.textContent = 'Carregando\u2026';
     try {
       var lista = await api('/api/exercito');
       box.replaceChildren();
@@ -411,7 +411,7 @@ footer{text-align:center;color:var(--mudo);font-size:13px;padding:0 16px 30px}
       if (c === 'prefeito') {
         var n = g.municipio.value.trim().toLowerCase();
         var m = MUN.find(function (x) { return x.nome.toLowerCase() === n; });
-        if (!m) throw new Error('Escolha o município na lista de sugestões.');
+        if (!m) throw new Error('Escolha o munic\u00edpio na lista de sugest\u00f5es.');
         q += '&municipio=' + m.codigo;
       }
       var d = await api('/api/candidato?' + q, g);
@@ -421,8 +421,8 @@ footer{text-align:center;color:var(--mudo);font-size:13px;padding:0 16px 30px}
       img.onerror = function () { img.remove(); };
       info.append(el('h3', null, d.nome), dl([
         ['Nome na urna', d.urna],
-        ['Número', d.numero],
-        ['Partido', d.partido + (d.partidoNome ? ' — ' + d.partidoNome : '')],
+        ['N\u00famero', d.numero],
+        ['Partido', d.partido + (d.partidoNome ? ' \u2014 ' + d.partidoNome : '')],
         ['Cargo', d.cargo + ' (' + d.ano + ')'],
         ['Resultado', d.situacao],
         ['Registro', d.registro]
@@ -440,28 +440,28 @@ footer{text-align:center;color:var(--mudo);font-size:13px;padding:0 16px 30px}
       var d = await api('/api/cnpj?n=' + encodeURIComponent(f.doc.value), f);
       var box = el('div', 'res');
       if (!d.existe) {
-        box.append(el('span', 'badge bad', 'CNPJ não encontrado'), el('p', null, 'Não há empresa com esse número na base da Receita Federal. Confira os dígitos.'));
+        box.append(el('span', 'badge bad', 'CNPJ n\u00e3o encontrado'), el('p', null, 'N\u00e3o h\u00e1 empresa com esse n\u00famero na base da Receita Federal. Confira os d\u00edgitos.'));
         return box;
       }
       var ativa = /^ativa$/i.test(d.situacao || '');
-      box.append(el('span', 'badge ' + (ativa ? 'ok' : 'bad'), 'Situação: ' + d.situacao), el('h3', null, d.razaoSocial));
+      box.append(el('span', 'badge ' + (ativa ? 'ok' : 'bad'), 'Situa\u00e7\u00e3o: ' + d.situacao), el('h3', null, d.razaoSocial));
       box.append(dl([
         ['Nome fantasia', d.fantasia],
         ['CNPJ', d.cnpj],
-        ['Situação desde', dt(d.desde)],
+        ['Situa\u00e7\u00e3o desde', dt(d.desde)],
         ['Motivo', d.motivo && !/sem motivo/i.test(d.motivo) ? d.motivo : ''],
-        ['Situação especial', d.situacaoEspecial],
+        ['Situa\u00e7\u00e3o especial', d.situacaoEspecial],
         ['Abertura', dt(d.abertura)],
         ['Tipo', d.tipo],
         ['Atividade principal', d.atividade],
-        ['Natureza jurídica', d.natureza],
+        ['Natureza jur\u00eddica', d.natureza],
         ['Porte', d.porte],
         ['Capital social', brl(d.capital)],
         ['Local', d.local]
       ]));
-      if (!ativa) box.append(el('div', 'msg', 'Atenção: a empresa não está com situação ativa na Receita Federal.'));
-      var n = el('p', 'nota', 'Dívidas e pendências fiscais não aparecem nesta consulta. Para saber se há débitos, emita a certidão oficial: ');
-      var a = el('a', null, 'Certidão da Receita Federal e PGFN');
+      if (!ativa) box.append(el('div', 'msg', 'Aten\u00e7\u00e3o: a empresa n\u00e3o est\u00e1 com situa\u00e7\u00e3o ativa na Receita Federal.'));
+      var n = el('p', 'nota', 'D\u00edvidas e pend\u00eancias fiscais n\u00e3o aparecem nesta consulta. Para saber se h\u00e1 d\u00e9bitos, emita a certid\u00e3o oficial: ');
+      var a = el('a', null, 'Certid\u00e3o da Receita Federal e PGFN');
       a.href = 'https://solucoes.receita.fazenda.gov.br/Servicos/certidaointernet/PJ/Emitir'; a.target = '_blank'; a.rel = 'noopener';
       n.append(a);
       box.append(n);
@@ -501,9 +501,9 @@ http.createServer(async (req, res) => {
                 return enviar(res, 200, u.pathname === '/api/cnpj' ? await cnpj(q.get('n')) : await candidato(q));
             }
         }
-        enviar(res, 404, { erro: 'Página não encontrada.' });
+        enviar(res, 404, { erro: 'P\u00e1gina n\u00e3o encontrada.' });
     } catch (e) {
         console.error(u.pathname, e.message);
-        enviar(res, e.status || 502, { erro: e.status ? e.message : 'A fonte oficial não respondeu agora. Tente de novo em instantes.' });
+        enviar(res, e.status || 502, { erro: e.status ? e.message : 'A fonte oficial n\u00e3o respondeu agora. Tente de novo em instantes.' });
     }
 }).listen(PORT, () => console.log('InfoBrasil rodando na porta ' + PORT));
