@@ -187,6 +187,17 @@ function limitado(ip) {
     return a.length > 30;
 }
 
+// Remove da memoria os IPs inativos, para a lista nao crescer sem parar.
+setInterval(() => {
+    const agora = Date.now();
+    for (const [ip, t] of hits) if (!t.some((x) => agora - x < 60000)) hits.delete(ip);
+}, 60000).unref();
+
+// IP real do visitante. No Render o trafego passa pelo Cloudflare, que escreve o
+// cabecalho CF-Connecting-IP e ignora o valor que o visitante tentar enviar.
+// O X-Forwarded-For NAO e usado: o visitante consegue escrever nele e fingir ser outro IP.
+const ipDe = (req) => String(req.headers['cf-connecting-ip'] || req.socket.remoteAddress || '').trim();
+
 // ---------- P\u00e1gina ----------
 const cap = () => (SITEKEY ? '<div class="cf-turnstile" data-sitekey="' + SITEKEY + '"></div>' : '');
 
@@ -483,7 +494,7 @@ function enviar(res, status, body, tipo) {
 
 http.createServer(async (req, res) => {
     const u = new URL(req.url, 'http://localhost');
-    const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+    const ip = ipDe(req);
     try {
         if (u.pathname === '/') return enviar(res, 200, pagina(), 'text/html; charset=utf-8');
         if (u.pathname === '/healthz') return enviar(res, 200, 'ok', 'text/plain');
